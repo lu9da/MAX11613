@@ -12,6 +12,13 @@
 * 
 ************************/
 
+/***********************
+* 20/092024  
+* increased resolution to 12 bit
+* by add 16 samples and divide by 4
+* as seen in 
+* https://forum.arduino.cc/t/converting-analog-values-to-12bits/246579/10
+***********************/
 
 #include <Wire.h>
 
@@ -27,15 +34,28 @@ int ledState = LOW;
 unsigned long previousMillis = 0;
 uint8_t received;
 uint8_t message;
-int VADC0;
-int VADC1;
-int VADC2;
-int VADC3;
+int VADC0[16];
+int VADC1[16];
+int VADC2[16];
+int VADC3[16];
+int sum0 = 0;
+int sum1 = 0;
+int sum2 = 0;
+int sum3 = 0;
+int val0 = 0;
+int val1 = 0;
+int val2 = 0;
+int val3 = 0;
+
+byte s = 0;
+
 
 
 //#define debug
 
-
+//int sum = 0;
+//for (byte s = 0; s < 16; s++) sum += analogRead(A0);
+//int value = sum/4;
 
 
 void setup() {
@@ -56,24 +76,26 @@ void setup() {
 void requestEvent()
 {
 
-    Wire.write(highByte(VADC0));
-    Wire.write(lowByte(VADC0));
-    Wire.write(highByte(VADC1));
-    Wire.write(lowByte(VADC1));
-    Wire.write(highByte(VADC2));
-    Wire.write(lowByte(VADC2));
-    Wire.write(highByte(VADC3));
-    Wire.write(lowByte(VADC3));
+    Wire.write(highByte(val0));
+    Wire.write(lowByte(val0));
+    Wire.write(highByte(val1));
+    Wire.write(lowByte(val1));
+    Wire.write(highByte(val2));
+    Wire.write(lowByte(val2));
+    Wire.write(highByte(val3));
+    Wire.write(lowByte(val3));
 
 #if defined debug
+
   Serial.print("ADC0: ");
-  Serial.println(VADC0);
+  Serial.println(val0);
   Serial.print("ADC1: ");
-  Serial.println(VADC1);
+  Serial.println(val1);
   Serial.print("ADC2: ");
-  Serial.println(VADC2);
-  Serial.print("ADC2: ");
-  Serial.println(VADC2);
+  Serial.println(val2);
+  Serial.print("ADC3: ");
+  Serial.println(val3);
+
 #endif
     
 
@@ -95,13 +117,43 @@ void loop() {
     }
 
     digitalWrite(ledPin, ledState);
+
   }
 
-  VADC0=analogRead(ADC0)<<2;
-  VADC1=analogRead(ADC1)<<2;
-  VADC2=analogRead(ADC2)<<2;
-  VADC3=analogRead(ADC3)<<2;
+  VADC0[s] = analogRead(ADC0);
+  VADC1[s] = analogRead(ADC1);
+  VADC2[s] = analogRead(ADC2);
+  VADC3[s] = analogRead(ADC3);
+
+  s++; 
+
+  if (s > 15) {
+
+    s = 0;
   
+  }
+
+
+  sum0 = 0;
+  sum1 = 0;
+  sum2 = 0;
+  sum3 = 0;
+
+  for (byte su = 0; su < 16; su++){
+
+    sum0 = sum0 + VADC0[su];
+    sum1 = sum1 + VADC1[su];
+    sum2 = sum2 + VADC2[su];
+    sum3 = sum3 + VADC3[su];
+  
+  } 
+
+  val0 = sum0/4;
+  val1 = sum1/4;
+  val2 = sum2/4;
+  val3 = sum3/4;
+
+
 }
 
 
